@@ -5,6 +5,7 @@
 *.swo
 .vscode/
 .idea/
+.wrangler/
 node_modules/
 dist/
 build/
