@@ -3,7 +3,7 @@
 A tiny classroom-friendly web remote for controlling an Ozobot Evo from Chrome
 using Web Bluetooth.
 
-Live app: https://unofficial-evo-remote.pages.dev
+Live app: [https://unofficial-evo-remote.pages.dev](https://unofficial-evo-remote.pages.dev)
 
 This is an unofficial project. It is not made by, endorsed by, or affiliated
 with Ozobot.
