@@ -6,6 +6,7 @@ const OZOBOT_WHEEL_TRACK_M = 0.023;
 const COMMAND_DURATION_MS = 320;
 const STOP_DURATION_MS = 120;
 const STREAM_INTERVAL_MS = 100;
+const EFFECT_INTERVAL_MS = 420;
 const DISPLAY_LIGHTS = 0x3f;
 
 const MESSAGE_VELOCITY_REQUEST = 104;
@@ -14,6 +15,8 @@ const MESSAGE_SET_LED_REQUEST = 110;
 const MESSAGE_SET_LED_RESPONSE = 111;
 const MESSAGE_STOP_EXECUTION_REQUEST = 120;
 const MESSAGE_STOP_EXECUTION_RESPONSE = 121;
+const MESSAGE_PLAY_TONE_REQUEST = 118;
+const MESSAGE_PLAY_TONE_RESPONSE = 119;
 const COLORS = {
   red: { label: "Red", rgb: [255, 0, 0] },
   orange: { label: "Orange", rgb: [255, 110, 0] },
@@ -23,6 +26,46 @@ const COLORS = {
   purple: { label: "Purple", rgb: [170, 80, 255] },
   pink: { label: "Pink", rgb: [255, 80, 180] },
   white: { label: "White", rgb: [255, 255, 255] },
+};
+const RAINBOW_COLORS = [
+  [255, 0, 0],
+  [255, 110, 0],
+  [255, 220, 0],
+  [0, 255, 80],
+  [0, 90, 255],
+  [170, 80, 255],
+  [255, 80, 180],
+];
+const LIGHT_EFFECTS = {
+  blink: { label: "Blink" },
+  pulse: { label: "Pulse" },
+  rainbow: { label: "Rainbow" },
+  redBlue: { label: "Red/Blue" },
+};
+const SOUND_PATTERNS = {
+  beep: {
+    label: "Beep",
+    notes: [{ frequency: 880, duration: 140 }],
+  },
+  boop: {
+    label: "Boop",
+    notes: [{ frequency: 330, duration: 170 }],
+  },
+  chirp: {
+    label: "Chirp",
+    notes: [
+      { frequency: 760, duration: 90 },
+      { frequency: 1040, duration: 110 },
+    ],
+  },
+  tada: {
+    label: "Ta-Da",
+    notes: [
+      { frequency: 523, duration: 110 },
+      { frequency: 659, duration: 110 },
+      { frequency: 784, duration: 180 },
+    ],
+  },
 };
 
 const statusEl = document.querySelector("#status");
@@ -40,7 +83,19 @@ const lastCommandEl = document.querySelector("#lastCommand");
 const stopEl = document.querySelector("#stop");
 const driveButtons = Array.from(document.querySelectorAll("[data-dir]"));
 const colorSwatches = Array.from(document.querySelectorAll("[data-color]"));
-const controlButtons = [...driveButtons, stopEl, flashColorEl, setColorEl, lightsOffEl];
+const effectButtons = Array.from(document.querySelectorAll("[data-effect]"));
+const stopEffectEl = document.querySelector("#stopEffect");
+const soundButtons = Array.from(document.querySelectorAll("[data-sound]"));
+const controlButtons = [
+  ...driveButtons,
+  stopEl,
+  flashColorEl,
+  setColorEl,
+  lightsOffEl,
+  ...effectButtons,
+  stopEffectEl,
+  ...soundButtons,
+];
 
 let device = null;
 let server = null;
@@ -53,6 +108,11 @@ let writeQueue = Promise.resolve();
 let sentIdleStop = true;
 let isFlashing = false;
 let selectedColor = "red";
+let activeEffect = null;
+let effectTimer = null;
+let effectStep = 0;
+let effectInFlight = false;
+let soundInFlight = false;
 const active = new Set();
 const pendingResponses = [];
 
@@ -74,8 +134,12 @@ function setConnectionState(connected, name = "") {
     control.disabled = !connected || isFlashing;
   }
 
+  updateEffectControls();
+  updateSoundControls();
+
   if (!connected) {
     active.clear();
+    stopEffect(false, false);
     sentIdleStop = true;
     streamStateEl.textContent = "Idle";
     lastCommandEl.textContent = "none";
@@ -167,6 +231,18 @@ function makeStopExecutionPacket(requestId = 0) {
   view.setUint16(0, MESSAGE_STOP_EXECUTION_REQUEST, true);
   view.setUint32(2, requestId, true);
   return new Uint8Array(buffer);
+}
+
+function makePlayTonePacket(frequencyHz, durationMs, volume = 1) {
+  const id = nextRequestId();
+  const buffer = new ArrayBuffer(11);
+  const view = new DataView(buffer);
+  view.setUint16(0, MESSAGE_PLAY_TONE_REQUEST, true);
+  view.setUint32(2, id, true);
+  view.setUint16(6, clamp(Math.round(frequencyHz), 20, 20000), true);
+  view.setUint16(8, clamp(Math.round(durationMs), 1, 5000), true);
+  view.setUint8(10, clamp(Math.round(volume), 0, 255));
+  return { id, bytes: new Uint8Array(buffer) };
 }
 
 function waitForResponse(expectedMessageId, expectedRequestId = null, timeoutMs = 1200) {
@@ -280,10 +356,16 @@ async function stopExecution(requestId = 0) {
   await sendRequest(bytes, MESSAGE_STOP_EXECUTION_RESPONSE, requestId);
 }
 
+async function sendTone(frequencyHz, durationMs, volume = 1) {
+  const packet = makePlayTonePacket(frequencyHz, durationMs, volume);
+  await sendRequest(packet.bytes, MESSAGE_PLAY_TONE_RESPONSE, packet.id);
+}
+
 async function setSelectedColor() {
   if (!isConnected || isFlashing) return;
 
   active.clear();
+  stopEffect(false, false);
   const { label, rgb } = selectedColorConfig();
   setStatus(`Setting ${label.toLowerCase()}...`);
   streamStateEl.textContent = `Lights: ${label}`;
@@ -302,6 +384,7 @@ async function turnLightsOff() {
   if (!isConnected || isFlashing) return;
 
   active.clear();
+  stopEffect(false, false);
   setStatus("Turning lights off...");
 
   try {
@@ -311,6 +394,132 @@ async function turnLightsOff() {
     streamStateEl.textContent = "Idle";
   } catch (error) {
     setStatus(error.message, "warn");
+  }
+}
+
+function effectColor(effectName, step) {
+  const { rgb } = selectedColorConfig();
+
+  if (effectName === "blink") {
+    return step % 2 === 0 ? { rgb, alpha: 255 } : { rgb: [0, 0, 0], alpha: 0 };
+  }
+
+  if (effectName === "pulse") {
+    const levels = [0.18, 0.45, 1, 0.45];
+    const level = levels[step % levels.length];
+    return { rgb: rgb.map((channel) => Math.round(channel * level)), alpha: 255 };
+  }
+
+  if (effectName === "rainbow") {
+    return { rgb: RAINBOW_COLORS[step % RAINBOW_COLORS.length], alpha: 255 };
+  }
+
+  if (effectName === "redBlue") {
+    return { rgb: step % 2 === 0 ? [255, 0, 0] : [0, 90, 255], alpha: 255 };
+  }
+
+  return { rgb, alpha: 255 };
+}
+
+function updateEffectControls() {
+  for (const button of effectButtons) {
+    const isActive = button.dataset.effect === activeEffect;
+    button.classList.toggle("effect-active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+    button.disabled = !isConnected || isFlashing;
+  }
+
+  stopEffectEl.disabled = !isConnected || isFlashing || !activeEffect;
+}
+
+function updateSoundControls() {
+  for (const button of soundButtons) {
+    button.disabled = !isConnected || isFlashing || soundInFlight;
+  }
+}
+
+function stopEffect(turnLightsOffAfterStop = false, announce = true) {
+  if (effectTimer) {
+    window.clearInterval(effectTimer);
+    effectTimer = null;
+  }
+
+  const hadEffect = Boolean(activeEffect);
+  activeEffect = null;
+  effectStep = 0;
+  effectInFlight = false;
+  updateEffectControls();
+
+  if (announce && hadEffect) {
+    setStatus("Effect stopped", "good");
+    streamStateEl.textContent = "Idle";
+  }
+
+  if (turnLightsOffAfterStop && isConnected) {
+    turnLightsOff().catch((error) => setStatus(error.message, "warn"));
+  }
+}
+
+async function runEffectTick() {
+  if (!activeEffect || !isConnected || isFlashing || effectInFlight) return;
+
+  const { rgb, alpha } = effectColor(activeEffect, effectStep);
+  effectStep += 1;
+  effectInFlight = true;
+
+  try {
+    await sendLed(rgb[0], rgb[1], rgb[2], alpha);
+  } catch (error) {
+    stopEffect(false, false);
+    setStatus(error.message, "warn");
+  } finally {
+    effectInFlight = false;
+  }
+}
+
+async function startEffect(effectName) {
+  if (!isConnected || isFlashing) return;
+
+  const effect = LIGHT_EFFECTS[effectName];
+  if (!effect) return;
+
+  stopEffect(false, false);
+  activeEffect = effectName;
+  effectStep = 0;
+  updateEffectControls();
+  setStatus(`${effect.label} effect`, "good");
+  streamStateEl.textContent = `Effect: ${effect.label}`;
+
+  try {
+    await stopExecution();
+    await runEffectTick();
+    effectTimer = window.setInterval(runEffectTick, EFFECT_INTERVAL_MS);
+  } catch (error) {
+    stopEffect(false, false);
+    setStatus(error.message, "warn");
+  }
+}
+
+async function playSound(soundName) {
+  if (!isConnected || isFlashing || soundInFlight) return;
+
+  const sound = SOUND_PATTERNS[soundName];
+  if (!sound) return;
+
+  soundInFlight = true;
+  updateSoundControls();
+  setStatus(`${sound.label} sound`, "good");
+
+  try {
+    for (const note of sound.notes) {
+      await sendTone(note.frequency, note.duration);
+      await sleep(note.duration + 30);
+    }
+  } catch (error) {
+    setStatus(error.message, "warn");
+  } finally {
+    soundInFlight = false;
+    updateSoundControls();
   }
 }
 
@@ -440,6 +649,7 @@ async function disconnect() {
 }
 
 function handleDisconnected() {
+  stopEffect(false, false);
   characteristic = null;
   server = null;
   device = null;
@@ -456,6 +666,7 @@ async function flashColor() {
 
   isFlashing = true;
   active.clear();
+  stopEffect(false, false);
   setConnectionState(true, device?.name || "Ozobot Evo");
   const { label, rgb } = selectedColorConfig();
   setStatus(`Flashing ${label.toLowerCase()}...`);
@@ -499,10 +710,19 @@ disconnectEl.addEventListener("click", disconnect);
 flashColorEl.addEventListener("click", flashColor);
 setColorEl.addEventListener("click", setSelectedColor);
 lightsOffEl.addEventListener("click", turnLightsOff);
+stopEffectEl.addEventListener("click", () => stopEffect(false));
 stopEl.addEventListener("click", () => stop().catch((error) => setStatus(error.message, "warn")));
 
 for (const swatch of colorSwatches) {
   swatch.addEventListener("click", () => updateColorSelection(swatch.dataset.color));
+}
+
+for (const button of effectButtons) {
+  button.addEventListener("click", () => startEffect(button.dataset.effect));
+}
+
+for (const button of soundButtons) {
+  button.addEventListener("click", () => playSound(button.dataset.sound));
 }
 
 for (const button of driveButtons) {

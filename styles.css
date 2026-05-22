@@ -236,6 +236,29 @@ input[type="range"] {
   margin-top: 14px;
 }
 
+.effects-panel {
+  margin-top: 16px;
+}
+
+.sounds-panel {
+  margin-top: 16px;
+}
+
+.effects-row,
+.sounds-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.effect-active {
+  background: var(--good);
+}
+
+.effect-active:hover {
+  background: var(--good);
+}
+
 .secondary-action {
   background: #5f6d7a;
 }

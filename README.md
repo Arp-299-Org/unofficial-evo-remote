@@ -16,7 +16,9 @@ picker, then hold the on-screen arrows or `W/A/S/D` / arrow keys to drive.
 The light swatches let students choose a robot color. `Set Color` turns the
 selected color on for the front/top lights, `Lights Off` clears those lights,
 and `Flash Color` blinks the connected robot in the selected color so students
-can identify which Evo they selected. `STOP`, `Space`, and `Escape` send an
+can identify which Evo they selected. The effect buttons can run simple light
+animations such as blink, pulse, rainbow, and red/blue while students drive.
+Sound buttons play short tone patterns. `STOP`, `Space`, and `Escape` send an
 immediate stop.
 
 Only connect to robots you own or are authorized to control.
@@ -38,6 +40,7 @@ app.
 - Wake up or charge the Evo before connecting.
 - If the wrong robot connects, choose a bright swatch and click `Flash Color` to
   identify it.
+- If a light effect is still running, click `Stop Effect`.
 - If the lights stay on after testing, click `Lights Off`.
 - If driving feels choppy, disconnect and reconnect, move closer to the robot,
   or reduce the number of active Bluetooth devices nearby.
