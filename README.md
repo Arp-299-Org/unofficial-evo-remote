@@ -88,5 +88,6 @@ service:        8903136c-5f13-4548-a885-c58779136801
 characteristic: 8903136c-5f13-4548-a885-c58779136802
 ```
 
-Drive commands use the control-service velocity request (`104`). Light controls
-use the set-LED request (`110`).
+Drive commands use the control-service velocity request (`104`). On connect, the
+app sends stop-execution (`120`) to clear any running robot behavior before
+direct control. Light controls use the set-LED request (`110`).

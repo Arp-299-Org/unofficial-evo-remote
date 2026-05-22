@@ -12,6 +12,8 @@ const MESSAGE_VELOCITY_REQUEST = 104;
 const MESSAGE_VELOCITY_RESPONSE = 105;
 const MESSAGE_SET_LED_REQUEST = 110;
 const MESSAGE_SET_LED_RESPONSE = 111;
+const MESSAGE_STOP_EXECUTION_REQUEST = 120;
+const MESSAGE_STOP_EXECUTION_RESPONSE = 121;
 const COLORS = {
   red: { label: "Red", rgb: [255, 0, 0] },
   orange: { label: "Orange", rgb: [255, 110, 0] },
@@ -159,6 +161,14 @@ function makeSetLedPacket(red, green, blue, alpha = 255) {
   return new Uint8Array(buffer);
 }
 
+function makeStopExecutionPacket(requestId = 0) {
+  const buffer = new ArrayBuffer(6);
+  const view = new DataView(buffer);
+  view.setUint16(0, MESSAGE_STOP_EXECUTION_REQUEST, true);
+  view.setUint32(2, requestId, true);
+  return new Uint8Array(buffer);
+}
+
 function waitForResponse(expectedMessageId, expectedRequestId = null, timeoutMs = 1200) {
   return new Promise((resolve, reject) => {
     const pending = {
@@ -265,6 +275,11 @@ async function sendLed(red, green, blue, alpha = 255) {
   await sendRequest(bytes, MESSAGE_SET_LED_RESPONSE);
 }
 
+async function stopExecution(requestId = 0) {
+  const bytes = makeStopExecutionPacket(requestId);
+  await sendRequest(bytes, MESSAGE_STOP_EXECUTION_RESPONSE, requestId);
+}
+
 async function setSelectedColor() {
   if (!isConnected || isFlashing) return;
 
@@ -275,6 +290,7 @@ async function setSelectedColor() {
 
   try {
     await sendVelocity(0, 0, STOP_DURATION_MS);
+    await stopExecution();
     await sendLed(rgb[0], rgb[1], rgb[2], 255);
     setStatus(`${label} light set`, "good");
   } catch (error) {
@@ -289,6 +305,7 @@ async function turnLightsOff() {
   setStatus("Turning lights off...");
 
   try {
+    await stopExecution();
     await sendLed(0, 0, 0, 0);
     setStatus("Lights off", "good");
     streamStateEl.textContent = "Idle";
@@ -399,6 +416,7 @@ async function connect() {
     await characteristic.startNotifications();
 
     setConnectionState(true, device.name || "Ozobot Evo");
+    await stopExecution();
     await sendVelocity(0, 0, STOP_DURATION_MS, true);
     setStatus("Connected", "good");
   } catch (error) {
@@ -445,6 +463,7 @@ async function flashColor() {
 
   try {
     await sendVelocity(0, 0, STOP_DURATION_MS);
+    await stopExecution();
     for (let i = 0; i < 3; i += 1) {
       await sendLed(rgb[0], rgb[1], rgb[2], 255);
       await sleep(220);
