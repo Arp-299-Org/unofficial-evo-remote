@@ -1,7 +1,8 @@
 # Unofficial Evo Remote
 
-A tiny classroom-friendly web remote for controlling an Ozobot Evo from Chrome
-using Web Bluetooth.
+Drive an Ozobot Evo like a remote-controlled car from Chrome. No account,
+registration, or email required: connect the robot, press the buttons, and
+watch it move in real time.
 
 Live app: [https://unofficial-evo-remote.pages.dev](https://unofficial-evo-remote.pages.dev)
 
