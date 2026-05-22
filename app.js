@@ -112,6 +112,7 @@ let activeEffect = null;
 let effectTimer = null;
 let effectStep = 0;
 let effectInFlight = false;
+let lastEffectFrame = null;
 let soundInFlight = false;
 const active = new Set();
 const pendingResponses = [];
@@ -344,11 +345,17 @@ async function sendVelocity(left, right, durationMs = COMMAND_DURATION_MS, waitF
   if (!waitForAck) await writePacket(packet.bytes);
   lastCommandEl.textContent = bytesToHex(packet.bytes);
   if (response) await response;
+  reassertEffectAfterMotion();
 }
 
 async function sendLed(red, green, blue, alpha = 255) {
   const bytes = makeSetLedPacket(red, green, blue, alpha);
   await sendRequest(bytes, MESSAGE_SET_LED_RESPONSE);
+}
+
+async function writeLed(red, green, blue, alpha = 255) {
+  const bytes = makeSetLedPacket(red, green, blue, alpha);
+  await writePacket(bytes);
 }
 
 async function stopExecution(requestId = 0) {
@@ -448,6 +455,7 @@ function stopEffect(turnLightsOffAfterStop = false, announce = true) {
   activeEffect = null;
   effectStep = 0;
   effectInFlight = false;
+  lastEffectFrame = null;
   updateEffectControls();
 
   if (announce && hadEffect) {
@@ -463,18 +471,34 @@ function stopEffect(turnLightsOffAfterStop = false, announce = true) {
 async function runEffectTick() {
   if (!activeEffect || !isConnected || isFlashing || effectInFlight) return;
 
-  const { rgb, alpha } = effectColor(activeEffect, effectStep);
+  const frame = effectColor(activeEffect, effectStep);
+  const { rgb, alpha } = frame;
   effectStep += 1;
+  lastEffectFrame = frame;
   effectInFlight = true;
 
   try {
-    await sendLed(rgb[0], rgb[1], rgb[2], alpha);
+    await writeLed(rgb[0], rgb[1], rgb[2], alpha);
   } catch (error) {
-    stopEffect(false, false);
-    setStatus(error.message, "warn");
+    if (isConnected) setStatus(error.message, "warn");
   } finally {
     effectInFlight = false;
   }
+}
+
+function reassertEffectAfterMotion() {
+  if (!activeEffect || !lastEffectFrame || !isConnected || isFlashing || effectInFlight) return;
+
+  effectInFlight = true;
+  const { rgb, alpha } = lastEffectFrame;
+
+  writeLed(rgb[0], rgb[1], rgb[2], alpha)
+    .catch((error) => {
+      if (isConnected) setStatus(error.message, "warn");
+    })
+    .finally(() => {
+      effectInFlight = false;
+    });
 }
 
 async function startEffect(effectName) {
