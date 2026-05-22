@@ -72,7 +72,8 @@ http://localhost:8765
 
 This app is zero-build static HTML/CSS/JS.
 
-Production deploys from the `main` branch on Cloudflare Pages.
+Production deploys from the `main` branch on Cloudflare Pages, watching all
+repo files for changes.
 
 Suggested Cloudflare Pages settings:
 
