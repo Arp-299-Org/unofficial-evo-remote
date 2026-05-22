@@ -3,6 +3,8 @@
 A tiny classroom-friendly web remote for controlling an Ozobot Evo from Chrome
 using Web Bluetooth.
 
+Live app: https://unofficial-evo-remote.pages.dev
+
 This is an unofficial project. It is not made by, endorsed by, or affiliated
 with Ozobot.
 
@@ -25,6 +27,24 @@ Only connect to robots you own or are authorized to control.
 
 Safari and Firefox do not currently support the Web Bluetooth API needed by this
 app.
+
+## Troubleshooting
+
+- Use Chrome on a desktop or Chromebook with Bluetooth enabled.
+- Use the hosted HTTPS site or a local `localhost` preview.
+- Wake up or charge the Evo before connecting.
+- If the wrong robot connects, click `Flash Color` to identify it.
+- If driving feels choppy, disconnect and reconnect, move closer to the robot,
+  or reduce the number of active Bluetooth devices nearby.
+
+## Known Limitations
+
+- Chrome's Bluetooth device picker is required; browsers do not expose a custom
+  in-page scan list for Web Bluetooth.
+- The app is intended for Ozobot Evo robots.
+- The app does not bypass pairing, classroom management, or device access
+  controls.
+- This is an unofficial project and is not affiliated with Ozobot.
 
 ## Local Preview
 
