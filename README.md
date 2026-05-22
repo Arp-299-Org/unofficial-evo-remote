@@ -14,9 +14,10 @@ Open the hosted site in Chrome, choose an Evo from Chrome's Bluetooth device
 picker, then hold the on-screen arrows or `W/A/S/D` / arrow keys to drive.
 
 The light swatches let students choose a robot color. `Set Color` turns the
-selected color on, `Lights Off` clears it, and `Flash Color` blinks the
-connected robot in the selected color so students can identify which Evo they
-selected. `STOP`, `Space`, and `Escape` send an immediate stop.
+selected color on for the front/top lights, `Lights Off` clears those lights,
+and `Flash Color` blinks the connected robot in the selected color so students
+can identify which Evo they selected. `STOP`, `Space`, and `Escape` send an
+immediate stop.
 
 Only connect to robots you own or are authorized to control.
 

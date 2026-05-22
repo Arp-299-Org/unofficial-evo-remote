@@ -6,7 +6,7 @@ const OZOBOT_WHEEL_TRACK_M = 0.023;
 const COMMAND_DURATION_MS = 320;
 const STOP_DURATION_MS = 120;
 const STREAM_INTERVAL_MS = 100;
-const ALL_ROBOT_LIGHTS = 0xff;
+const DISPLAY_LIGHTS = 0x3f;
 
 const MESSAGE_VELOCITY_REQUEST = 104;
 const MESSAGE_VELOCITY_RESPONSE = 105;
@@ -150,7 +150,8 @@ function makeSetLedPacket(red, green, blue, alpha = 255) {
   const buffer = new ArrayBuffer(8);
   const view = new DataView(buffer);
   view.setUint16(0, MESSAGE_SET_LED_REQUEST, true);
-  view.setUint16(2, ALL_ROBOT_LIGHTS, true);
+  // Top + five front LEDs. Avoid back/button status lights that firmware may reclaim.
+  view.setUint16(2, DISPLAY_LIGHTS, true);
   view.setUint8(4, clamp(red, 0, 255));
   view.setUint8(5, clamp(green, 0, 255));
   view.setUint8(6, clamp(blue, 0, 255));
