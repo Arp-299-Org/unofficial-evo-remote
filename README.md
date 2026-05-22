@@ -13,8 +13,10 @@ with Ozobot.
 Open the hosted site in Chrome, choose an Evo from Chrome's Bluetooth device
 picker, then hold the on-screen arrows or `W/A/S/D` / arrow keys to drive.
 
-`Flash Color` blinks the connected robot red and green so students can identify
-which Evo they selected. `STOP`, `Space`, and `Escape` send an immediate stop.
+The light swatches let students choose a robot color. `Set Color` turns the
+selected color on, `Lights Off` clears it, and `Flash Color` blinks the
+connected robot in the selected color so students can identify which Evo they
+selected. `STOP`, `Space`, and `Escape` send an immediate stop.
 
 Only connect to robots you own or are authorized to control.
 
@@ -33,7 +35,9 @@ app.
 - Use Chrome on a desktop or Chromebook with Bluetooth enabled.
 - Use the hosted HTTPS site or a local `localhost` preview.
 - Wake up or charge the Evo before connecting.
-- If the wrong robot connects, click `Flash Color` to identify it.
+- If the wrong robot connects, choose a bright swatch and click `Flash Color` to
+  identify it.
+- If the lights stay on after testing, click `Lights Off`.
 - If driving feels choppy, disconnect and reconnect, move closer to the robot,
   or reduce the number of active Bluetooth devices nearby.
 
@@ -83,5 +87,5 @@ service:        8903136c-5f13-4548-a885-c58779136801
 characteristic: 8903136c-5f13-4548-a885-c58779136802
 ```
 
-Drive commands use the control-service velocity request (`104`). LED flashing
-uses the set-LED request (`110`).
+Drive commands use the control-service velocity request (`104`). Light controls
+use the set-LED request (`110`).

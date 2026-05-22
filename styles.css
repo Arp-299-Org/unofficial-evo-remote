@@ -51,6 +51,12 @@ h2 {
   letter-spacing: 0;
 }
 
+h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
 section {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -191,6 +197,51 @@ input[type="range"] {
   grid-template-columns: 110px 1fr;
   gap: 10px 12px;
   font-size: 15px;
+}
+
+.lights-panel {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.color-swatch {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 2px solid #7b8793;
+  background: var(--swatch);
+}
+
+.color-swatch:hover {
+  background: var(--swatch);
+  filter: brightness(0.94);
+}
+
+.color-swatch.selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 4px var(--focus);
+}
+
+.light-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.secondary-action {
+  background: #5f6d7a;
+}
+
+.secondary-action:hover {
+  background: #4b5966;
 }
 
 .label {

@@ -12,12 +12,24 @@ const MESSAGE_VELOCITY_REQUEST = 104;
 const MESSAGE_VELOCITY_RESPONSE = 105;
 const MESSAGE_SET_LED_REQUEST = 110;
 const MESSAGE_SET_LED_RESPONSE = 111;
+const COLORS = {
+  red: { label: "Red", rgb: [255, 0, 0] },
+  orange: { label: "Orange", rgb: [255, 110, 0] },
+  yellow: { label: "Yellow", rgb: [255, 220, 0] },
+  green: { label: "Green", rgb: [0, 255, 80] },
+  blue: { label: "Blue", rgb: [0, 90, 255] },
+  purple: { label: "Purple", rgb: [170, 80, 255] },
+  pink: { label: "Pink", rgb: [255, 80, 180] },
+  white: { label: "White", rgb: [255, 255, 255] },
+};
 
 const statusEl = document.querySelector("#status");
 const connectEl = document.querySelector("#connect");
 const disconnectEl = document.querySelector("#disconnect");
 const connectedToEl = document.querySelector("#connectedTo");
 const flashColorEl = document.querySelector("#flashColor");
+const setColorEl = document.querySelector("#setColor");
+const lightsOffEl = document.querySelector("#lightsOff");
 const speedEl = document.querySelector("#speed");
 const speedValueEl = document.querySelector("#speedValue");
 const robotNameEl = document.querySelector("#robotName");
@@ -25,7 +37,8 @@ const streamStateEl = document.querySelector("#streamState");
 const lastCommandEl = document.querySelector("#lastCommand");
 const stopEl = document.querySelector("#stop");
 const driveButtons = Array.from(document.querySelectorAll("[data-dir]"));
-const controlButtons = [...driveButtons, stopEl, flashColorEl];
+const colorSwatches = Array.from(document.querySelectorAll("[data-color]"));
+const controlButtons = [...driveButtons, stopEl, flashColorEl, setColorEl, lightsOffEl];
 
 let device = null;
 let server = null;
@@ -37,6 +50,7 @@ let driveInFlight = false;
 let writeQueue = Promise.resolve();
 let sentIdleStop = true;
 let isFlashing = false;
+let selectedColor = "red";
 const active = new Set();
 const pendingResponses = [];
 
@@ -64,6 +78,26 @@ function setConnectionState(connected, name = "") {
     streamStateEl.textContent = "Idle";
     lastCommandEl.textContent = "none";
   }
+}
+
+function selectedColorConfig() {
+  return COLORS[selectedColor] || COLORS.red;
+}
+
+function updateColorSelection(nextColor, announce = true) {
+  if (!COLORS[nextColor]) return;
+
+  selectedColor = nextColor;
+
+  for (const swatch of colorSwatches) {
+    const isSelected = swatch.dataset.color === selectedColor;
+    swatch.classList.toggle("selected", isSelected);
+    swatch.setAttribute("aria-pressed", String(isSelected));
+  }
+
+  const { label } = selectedColorConfig();
+  setColorEl.textContent = `Set ${label}`;
+  if (announce) setStatus(`${label} selected`);
 }
 
 function browserCanUseBluetooth() {
@@ -230,6 +264,38 @@ async function sendLed(red, green, blue, alpha = 255) {
   await sendRequest(bytes, MESSAGE_SET_LED_RESPONSE);
 }
 
+async function setSelectedColor() {
+  if (!isConnected || isFlashing) return;
+
+  active.clear();
+  const { label, rgb } = selectedColorConfig();
+  setStatus(`Setting ${label.toLowerCase()}...`);
+  streamStateEl.textContent = `Lights: ${label}`;
+
+  try {
+    await sendVelocity(0, 0, STOP_DURATION_MS);
+    await sendLed(rgb[0], rgb[1], rgb[2], 255);
+    setStatus(`${label} light set`, "good");
+  } catch (error) {
+    setStatus(error.message, "warn");
+  }
+}
+
+async function turnLightsOff() {
+  if (!isConnected || isFlashing) return;
+
+  active.clear();
+  setStatus("Turning lights off...");
+
+  try {
+    await sendLed(0, 0, 0, 0);
+    setStatus("Lights off", "good");
+    streamStateEl.textContent = "Idle";
+  } catch (error) {
+    setStatus(error.message, "warn");
+  }
+}
+
 function driveVector() {
   const speed = Number(speedEl.value);
   let y = 0;
@@ -372,15 +438,14 @@ async function flashColor() {
   isFlashing = true;
   active.clear();
   setConnectionState(true, device?.name || "Ozobot Evo");
-  setStatus("Flashing color...");
+  const { label, rgb } = selectedColorConfig();
+  setStatus(`Flashing ${label.toLowerCase()}...`);
   streamStateEl.textContent = "Identifying";
 
   try {
     await sendVelocity(0, 0, STOP_DURATION_MS);
     for (let i = 0; i < 3; i += 1) {
-      await sendLed(255, 0, 0, 255);
-      await sleep(220);
-      await sendLed(0, 255, 80, 255);
+      await sendLed(rgb[0], rgb[1], rgb[2], 255);
       await sleep(220);
       await sendLed(0, 0, 0, 0);
       await sleep(160);
@@ -412,7 +477,13 @@ function releasePointer(event) {
 connectEl.addEventListener("click", connect);
 disconnectEl.addEventListener("click", disconnect);
 flashColorEl.addEventListener("click", flashColor);
+setColorEl.addEventListener("click", setSelectedColor);
+lightsOffEl.addEventListener("click", turnLightsOff);
 stopEl.addEventListener("click", () => stop().catch((error) => setStatus(error.message, "warn")));
+
+for (const swatch of colorSwatches) {
+  swatch.addEventListener("click", () => updateColorSelection(swatch.dataset.color));
+}
 
 for (const button of driveButtons) {
   const dir = button.dataset.dir;
@@ -478,4 +549,5 @@ if (!browserCanUseBluetooth()) {
   setStatus("Use Chrome on HTTPS or localhost", "warn");
 }
 
+updateColorSelection(selectedColor, false);
 setConnectionState(false);

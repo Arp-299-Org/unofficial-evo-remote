@@ -54,6 +54,88 @@
           <span class="label">State</span><span id="streamState">Idle</span>
           <span class="label">Last command</span><span id="lastCommand">none</span>
         </div>
+
+        <div class="lights-panel">
+          <h3>Lights</h3>
+          <div class="color-row" role="group" aria-label="Robot light color">
+            <button
+              class="color-swatch selected"
+              type="button"
+              data-color="red"
+              style="--swatch: #ef4444;"
+              aria-label="Red"
+              aria-pressed="true"
+              title="Red"
+            ></button>
+            <button
+              class="color-swatch"
+              type="button"
+              data-color="orange"
+              style="--swatch: #f97316;"
+              aria-label="Orange"
+              aria-pressed="false"
+              title="Orange"
+            ></button>
+            <button
+              class="color-swatch"
+              type="button"
+              data-color="yellow"
+              style="--swatch: #facc15;"
+              aria-label="Yellow"
+              aria-pressed="false"
+              title="Yellow"
+            ></button>
+            <button
+              class="color-swatch"
+              type="button"
+              data-color="green"
+              style="--swatch: #22c55e;"
+              aria-label="Green"
+              aria-pressed="false"
+              title="Green"
+            ></button>
+            <button
+              class="color-swatch"
+              type="button"
+              data-color="blue"
+              style="--swatch: #3b82f6;"
+              aria-label="Blue"
+              aria-pressed="false"
+              title="Blue"
+            ></button>
+            <button
+              class="color-swatch"
+              type="button"
+              data-color="purple"
+              style="--swatch: #a855f7;"
+              aria-label="Purple"
+              aria-pressed="false"
+              title="Purple"
+            ></button>
+            <button
+              class="color-swatch"
+              type="button"
+              data-color="pink"
+              style="--swatch: #ec4899;"
+              aria-label="Pink"
+              aria-pressed="false"
+              title="Pink"
+            ></button>
+            <button
+              class="color-swatch"
+              type="button"
+              data-color="white"
+              style="--swatch: #ffffff;"
+              aria-label="White"
+              aria-pressed="false"
+              title="White"
+            ></button>
+          </div>
+          <div class="light-actions">
+            <button id="setColor" type="button" disabled>Set Color</button>
+            <button id="lightsOff" class="secondary-action" type="button" disabled>Lights Off</button>
+          </div>
+        </div>
       </section>
     </div>
   </main>
