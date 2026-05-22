@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unofficial Evo Remote</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Unofficial Evo Remote</h1>
+      <div id="status" class="status">Ready</div>
+    </header>
+
+    <section>
+      <h2>Connection</h2>
+      <div class="connection-row">
+        <button id="connect">Connect Ozobot</button>
+        <button id="disconnect" class="danger" disabled>Disconnect</button>
+        <button id="connectedTo" class="connection-state" type="button">Not connected</button>
+        <button id="flashColor" type="button" disabled>Flash Color</button>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section>
+        <h2>Drive</h2>
+        <div class="speed">
+          <span class="label">Speed</span>
+          <input id="speed" type="range" min="100" max="1000" value="420">
+          <strong id="speedValue">420</strong>
+        </div>
+
+        <div class="pad">
+          <div></div>
+          <button data-dir="forward" disabled aria-label="Forward">&uarr;</button>
+          <div></div>
+          <button data-dir="left" disabled aria-label="Left">&larr;</button>
+          <div></div>
+          <button data-dir="right" disabled aria-label="Right">&rarr;</button>
+          <div></div>
+          <button data-dir="reverse" disabled aria-label="Backward">&darr;</button>
+          <div></div>
+        </div>
+
+        <button id="stop" class="stop-button" disabled>STOP</button>
+      </section>
+
+      <section>
+        <h2>Robot</h2>
+        <div class="telemetry">
+          <span class="label">Selected</span><span id="robotName">None</span>
+          <span class="label">State</span><span id="streamState">Idle</span>
+          <span class="label">Last command</span><span id="lastCommand">none</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

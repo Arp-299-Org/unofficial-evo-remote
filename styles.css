@@ -1,0 +1,229 @@
+:root {
+  color-scheme: light;
+  --bg: #eef2f5;
+  --panel: #ffffff;
+  --ink: #13202b;
+  --muted: #607080;
+  --line: #cbd5df;
+  --accent: #087f8c;
+  --accent-strong: #065f69;
+  --danger: #c24132;
+  --danger-strong: #992f24;
+  --good: #1f7a4d;
+  --focus: #f6c64f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+main {
+  width: min(980px, calc(100vw - 28px));
+  margin: 24px auto;
+  display: grid;
+  gap: 16px;
+}
+
+header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 760;
+  letter-spacing: 0;
+}
+
+h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 16px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  height: 44px;
+  padding: 0 16px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+button:hover {
+  background: var(--accent-strong);
+}
+
+button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.danger {
+  background: var(--danger);
+}
+
+.danger:hover {
+  background: var(--danger-strong);
+}
+
+.status {
+  min-width: 260px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 6px solid var(--accent);
+  background: var(--panel);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.status.good {
+  border-left-color: var(--good);
+}
+
+.status.warn {
+  border-left-color: var(--danger);
+}
+
+.connection-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.connection-state {
+  min-width: 250px;
+  height: 48px;
+  text-align: left;
+  background: #5f6d7a;
+  font-size: 16px;
+}
+
+.connection-state:hover {
+  background: #5f6d7a;
+}
+
+.connection-state.connected,
+.connection-state.connected:hover {
+  background: var(--good);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.speed {
+  display: grid;
+  grid-template-columns: 68px 1fr 52px;
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0 14px;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.pad {
+  display: grid;
+  grid-template-columns: repeat(3, 84px);
+  grid-template-rows: repeat(3, 64px);
+  gap: 8px;
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.pad button {
+  width: 84px;
+  height: 64px;
+  padding: 0;
+  font-size: 26px;
+}
+
+.stop-button {
+  display: block;
+  min-width: 150px;
+  height: 48px;
+  margin: 8px auto 0;
+  background: var(--danger);
+  font-size: 16px;
+}
+
+.stop-button:hover {
+  background: var(--danger-strong);
+}
+
+.telemetry {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 10px 12px;
+  font-size: 15px;
+}
+
+.label {
+  color: var(--muted);
+}
+
+@media (max-width: 760px) {
+  header,
+  .grid {
+    display: block;
+  }
+
+  header .status,
+  section {
+    margin-top: 16px;
+  }
+
+  .connection-state {
+    min-width: 100%;
+  }
+
+  .pad {
+    grid-template-columns: repeat(3, 74px);
+    grid-template-rows: repeat(3, 58px);
+  }
+
+  .pad button {
+    width: 74px;
+    height: 58px;
+  }
+
+  .stop-button {
+    width: min(220px, 100%);
+    height: 48px;
+  }
+}
